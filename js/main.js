@@ -1,7 +1,13 @@
 var Songs = [];
 
 $.get("data/latest.json", function(data) {
-    Songs = data;
+    Songs = data.sort(function (a, b) {
+        if(a.artist < b.artist) return -1;
+        else if(b.artist < a.artist) return 1;
+        else if(a.title < b.title) return -1;
+        else if(b.title < a.title) return 1;
+        else return 0;
+    });
     filter(Songs);
 });
 
