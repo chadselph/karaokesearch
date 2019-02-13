@@ -1,7 +1,6 @@
 CACHE MANIFEST
 css/normalize.css
 css/main.css
-data/latest.json
 img/touch/apple-touch-icon.png
 img/touch/apple-touch-icon-57x57-precomposed.png
 img/touch/apple-touch-icon-114x114-precomposed.png
@@ -9,13 +8,12 @@ img/touch/apple-touch-icon-72x72-precomposed.png
 img/touch/apple-touch-icon-precomposed.png
 img/touch/apple-touch-icon-144x144-precomposed.png
 img/djp.jpg
-js/helper.js
-js/main.js
-js/vendor/zepto.min.js
-js/vendor/modernizr-2.6.2.min.js
-js/plugins.js
+js/app.js
+js/vendor/bookmark_bubble.js
 index.html
 data/latest.json
-/
 
-# Updated: Sep 10 2015
+NETWORK:
+*
+
+# Updated: Feb 13 2019
