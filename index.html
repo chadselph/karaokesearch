@@ -34,9 +34,13 @@
     <body>
         <div id="app" />
           <script>
-            var app = Elm.Main.embed(
-              document.getElementById('app')
-            );
+            var app = Elm.Main.init({
+              node: document.getElementById('app'),
+              flags: JSON.parse(localStorage.getItem('cache'))
+            });
+            app.ports.cache.subscribe(function(data) {
+              localStorage.setItem('cache', JSON.stringify(data));
+            });
             window.addEventListener('load', function() {
               window.setTimeout(function() {
                   var bubble = new google.bookmarkbubble.Bubble();

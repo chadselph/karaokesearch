@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Browser
 import Html exposing (..)
@@ -12,10 +12,9 @@ import String
 import Regex
 import Html.Events exposing (onInput)
 import Maybe
--- import Storage.Local exposing (getSync, setSync)
 
 
-main : Program () Model Msg
+main : Program Decode.Value Model Msg
 main =
     Browser.element
         { init = init
@@ -24,6 +23,7 @@ main =
         , update = update
         }
 
+port cache : Encode.Value -> Cmd msg
 
 
 -- MODEL
@@ -41,24 +41,11 @@ type alias Model =
     }
 
 
---getState : List Song
---getState =
-    --case getSync "state" of
-        --Ok (Just songs) ->
-            --case Json.Decode.decodeString decodeSongs songs of
-                --Ok songs2 ->
-                    --songs2
-
-                --_ ->
-                    --[]
-
-        --_ ->
-            --[]
-
-
-init : flags -> ( Model, Cmd Msg )
-init args =
-    ( Model [] "", fetchSongs )
+init : Decode.Value -> ( Model, Cmd Msg )
+init songsString =
+  let songList = Decode.decodeValue decodeSongs songsString |> Result.withDefault []
+  in
+    ( Model songList  "", fetchSongs )
 
 
 
@@ -81,7 +68,7 @@ update msg model =
                 Cmd.none
             )
 
-        Songlist (Ok songs) -> ( { model | allSongs = songs }, Cmd.none )
+        Songlist (Ok songs) -> ( { model | allSongs = songs }, cache <| encodeSongs <| songs)
 
         UpdateFilter f ->
             ( { model | filter = f }, Cmd.none )
@@ -159,7 +146,7 @@ renderSongs songs =
 
 
 
--- HTTP
+-- HTTP / json
 
 
 fetchSongs : Cmd Msg
@@ -176,7 +163,6 @@ decodeSongs =
     Decode.list (Decode.map2 Song (Decode.field "title" Decode.string) (Decode.field "artist" Decode.string))
 
 
-{--
 encodeSongs : List Song -> Encode.Value
 encodeSongs songs =
     let
@@ -185,9 +171,5 @@ encodeSongs songs =
                 [ ( "artist", Encode.string artist )
                 , ( "title", Encode.string title )
                 ]
-
-        songsJson =
-            List.map encodeSong songs
     in
-        Encode.list songsJson
-        --}
+        Encode.list encodeSong songs
