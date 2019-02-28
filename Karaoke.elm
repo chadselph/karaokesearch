@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
@@ -8,18 +9,19 @@ import Json.Decode exposing (map2, list, field, string)
 import Json.Encode as Encode
 import List
 import String
-import Regex exposing (regex, replace, HowMany(All))
+import Regex
 import Html.Events exposing (onInput)
-import Storage.Local exposing (getSync, setSync)
+import Maybe
+-- import Storage.Local exposing (getSync, setSync)
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
+    Browser.element
         { init = init
+        , subscriptions = \_ -> Sub.none
         , view = view
         , update = update
-        , subscriptions = subscriptions
         }
 
 
@@ -39,24 +41,24 @@ type alias Model =
     }
 
 
-getState : List Song
-getState =
-    case getSync "state" of
-        Ok (Just songs) ->
-            case Json.Decode.decodeString decodeSongs songs of
-                Ok songs ->
-                    songs
+--getState : List Song
+--getState =
+    --case getSync "state" of
+        --Ok (Just songs) ->
+            --case Json.Decode.decodeString decodeSongs songs of
+                --Ok songs2 ->
+                    --songs2
 
-                _ ->
-                    []
+                --_ ->
+                    --[]
 
-        _ ->
-            []
+        --_ ->
+            --[]
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( Model getState "", fetchSongs )
+init : flags -> ( Model, Cmd Msg )
+init args =
+    ( Model [] "", fetchSongs )
 
 
 
@@ -79,12 +81,7 @@ update msg model =
                 Cmd.none
             )
 
-        Songlist (Ok songs) ->
-            let
-                set =
-                    setSync "state" (Encode.encode 0 (encodeSongs songs))
-            in
-                ( { model | allSongs = songs }, Cmd.none )
+        Songlist (Ok songs) -> ( { model | allSongs = songs }, Cmd.none )
 
         UpdateFilter f ->
             ( { model | filter = f }, Cmd.none )
@@ -94,7 +91,7 @@ filterSongs : String -> List Song -> List Song
 filterSongs search songs =
     let
         normalize =
-            String.toLower >> replace All (regex "[^\\w]") (\_ -> "")
+            String.toLower >> Regex.replace (Maybe.withDefault Regex.never <| Regex.fromString "[^\\w]") (\_ -> "")
 
         looselyContains needle haystack =
             String.contains (normalize needle) (normalize haystack)
@@ -135,7 +132,7 @@ script =
 
 view : Model -> Html Msg
 view model =
-  body []
+  div []
   [ h1 []
   [ text "Karaoke Search" ]
   , div [ class "container" ]
@@ -160,13 +157,6 @@ renderSongs songs =
 
 
 
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.none
-
 
 
 -- HTTP
@@ -178,7 +168,7 @@ fetchSongs =
         url =
             "https://lptsjwc3ua.execute-api.us-west-2.amazonaws.com/public/songs"
     in
-        Http.send Songlist (Http.get url decodeSongs)
+        Http.get {url = url, expect = Http.expectJson Songlist decodeSongs}
 
 
 decodeSongs : Decode.Decoder (List Song)
@@ -186,6 +176,7 @@ decodeSongs =
     Decode.list (Decode.map2 Song (Decode.field "title" Decode.string) (Decode.field "artist" Decode.string))
 
 
+{--
 encodeSongs : List Song -> Encode.Value
 encodeSongs songs =
     let
@@ -199,3 +190,4 @@ encodeSongs songs =
             List.map encodeSong songs
     in
         Encode.list songsJson
+        --}
